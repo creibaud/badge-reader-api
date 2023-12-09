@@ -18,6 +18,10 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 const rfidSchema = mongoose.Schema({uid: String});
 const RFID = mongoose.model('RFID', rfidSchema);
 
+app.get('/', async (req, res) => {
+    res.status(200).send("Hello World");
+});
+
 app.post('/rfid', async (req, res) => {
     try {
         const rfid = new RFID({uid: req.body.uid});
