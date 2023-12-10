@@ -19,7 +19,7 @@ const rfidSchema = mongoose.Schema({uid: String});
 const RFID = mongoose.model('RFID', rfidSchema);
 
 app.get('/', async (req, res) => {
-    res.status(200).send("Hello World");
+    res.status(200).send("This is an API");
 });
 
 app.post('/rfid', async (req, res) => {
