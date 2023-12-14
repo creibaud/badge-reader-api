@@ -43,6 +43,22 @@ app.get('/getRFID', async (req, res) => {
     }
 });
 
+app.delete('/deleteRFID', async (req, res) => {
+    try {
+        const uidToDelete = req.body.uid;
+        const deletedRFID = await RFID.findOneAndDelete({ uid: uidToDelete });
+
+        if (deletedRFID) {
+            res.status(200).send("RFID deleted");
+        } else {
+            res.status(404).send("RFID not found");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error deleting RFID");
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
