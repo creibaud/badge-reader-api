@@ -22,7 +22,7 @@ app.get('/', async (req, res) => {
     res.status(200).send("This is an API");
 });
 
-app.post('/rfid', async (req, res) => {
+app.post('/addRFID', async (req, res) => {
     try {
         const rfid = new RFID({uid: req.body.uid});
         await rfid.save();
@@ -33,7 +33,7 @@ app.post('/rfid', async (req, res) => {
     }
 });
 
-app.get('/rfid', async (req, res) => {
+app.get('/getRFID', async (req, res) => {
     try {
         const rfids = await RFID.find();
         res.status(200).send(rfids);
