@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
@@ -18,11 +19,46 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 const rfidSchema = mongoose.Schema({uid: String});
 const RFID = mongoose.model('RFID', rfidSchema);
 
-app.get('/', async (req, res) => {
-    res.status(200).send("This is an API");
+const generateAccessToken = (username) => {
+    return jwt.sign(username, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1800s' });
+};
+
+app.post('/login', async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    if (username === process.env.USERNAME && password === process.env.PASSWORD) {
+        const accessToken = generateAccessToken({ username: username });
+        res.status(200).send({ accessToken: accessToken });
+    } else {
+        res.status(401).send("Invalid credentials");
+    }
 });
 
-app.post('/addRFID', async (req, res) => {
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        res.status(401).send("Unauthorized");
+    }
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if (err) {
+            res.status(403).send("Forbidden");
+        }
+        req.user = user;
+        next();
+    });
+};
+
+app.get('/', async (req, res) => {
+    res.status(200).send("This is an API");
+    console.log(process.env.USERNAME);
+    console.log(process.env.PASSWORD);
+});
+
+app.post('/addRFID', authenticateToken, async (req, res) => {
     try {
         const rfid = new RFID({uid: req.body.uid});
         await rfid.save();
@@ -33,7 +69,7 @@ app.post('/addRFID', async (req, res) => {
     }
 });
 
-app.get('/getRFID', async (req, res) => {
+app.get('/getRFID', authenticateToken, async (req, res) => {
     try {
         const rfids = await RFID.find();
         res.status(200).send(rfids);
@@ -43,7 +79,7 @@ app.get('/getRFID', async (req, res) => {
     }
 });
 
-app.delete('/deleteRFID', async (req, res) => {
+app.delete('/deleteRFID', authenticateToken, async (req, res) => {
     try {
         const uidToDelete = req.body.uid;
         const deletedRFID = await RFID.findOneAndDelete({ uid: uidToDelete });
